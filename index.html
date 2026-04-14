@@ -1232,6 +1232,7 @@ function submitGuess(lat,lng){
     if(dissEl) try{ dissEl.textContent=getDiss(pts); }catch(e){}
     document.getElementById('total-score').textContent=totalScore;
     document.getElementById('next-btn').textContent=currentRound===cities.length-1?'See Results →':'Next City →';
+    setTimeout(()=>document.getElementById('result-overlay').classList.add('show'),2500);
   });
 }
 
