@@ -1446,11 +1446,23 @@ function showFinal(){
         drawerDesc.textContent=r.description||'';
         drawerImg.classList.remove('loaded');
         drawerImg.style.display='none';
-        const imgUrl = r.image_url || (r.image ? `https://en.wikipedia.org/wiki/Special:FilePath/${encodeURIComponent(r.image)}?width=600` : '');
+        // image_url from cities.json are Wikipedia thumb URLs — may be blocked
+        // Use Wikimedia Commons API as fallback via image filename
+        let imgUrl = r.image_url || '';
+        if(!imgUrl && r.image){
+          imgUrl = `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(r.image)}?width=600`;
+        }
         if(imgUrl){
           drawerImg.src=imgUrl;
           drawerImg.onload=()=>{drawerImg.style.display='block';drawerImg.classList.add('loaded');};
-          drawerImg.onerror=()=>{drawerImg.style.display='none';};
+          drawerImg.onerror=()=>{
+            // If image_url failed, try Commons FilePath
+            if(r.image && drawerImg.src !== `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(r.image)}?width=600`){
+              drawerImg.src=`https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(r.image)}?width=600`;
+            } else {
+              drawerImg.style.display='none';
+            }
+          };
         }
         drawer.classList.add('open');
       }
