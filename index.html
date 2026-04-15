@@ -1197,7 +1197,7 @@ function submitGuess(lat,lng){
   const km=haversineKm(lat,lng,city.lat,city.lng);
   const pts=calcScore(km);
   totalScore+=pts;
-  roundScores.push({name:city.name,country:city.country||'',lat:city.lat,lng:city.lng,pts,source:city.source,description:city.description||city.desc||'',pop:city.pop||'',image_url:city.image_url||'',contributed_by:city.contributed_by||''});
+  roundScores.push({name:city.name,country:city.country||'',lat:city.lat,lng:city.lng,pts,source:city.source,description:city.description||city.desc||'',pop:city.pop||'',image_url:city.image_url||'',image:city.image||'',contributed_by:city.contributed_by||''});
 
   playLaunchSound();
   const guessEl=document.createElement('div');
@@ -1446,8 +1446,9 @@ function showFinal(){
         drawerDesc.textContent=r.description||'';
         drawerImg.classList.remove('loaded');
         drawerImg.style.display='none';
-        if(r.image_url){
-          drawerImg.src=r.image_url;
+        const imgUrl = r.image_url || (r.image ? `https://en.wikipedia.org/wiki/Special:FilePath/${encodeURIComponent(r.image)}?width=600` : '');
+        if(imgUrl){
+          drawerImg.src=imgUrl;
           drawerImg.onload=()=>{drawerImg.style.display='block';drawerImg.classList.add('loaded');};
           drawerImg.onerror=()=>{drawerImg.style.display='none';};
         }
