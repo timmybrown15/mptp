@@ -897,7 +897,7 @@ function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Mat
 function pickRandom(arr,n){return shuffle([...arr]).slice(0,Math.min(n,arr.length));}
 
 async function buildGame(){
-  // Reset RNG to today's seed so every game — including Play Again — gives the same daily cities
+  // Reset RNG to today's seed — stable regardless of DB changes
   const rng = mulberry32(dateToSeed(TODAY));
   function dShuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
   function dPick(arr,n){return dShuffle([...arr]).slice(0,Math.min(n,arr.length));}
@@ -906,8 +906,23 @@ async function buildGame(){
   const custom = dbPlaces.map(p => ({ ...p, source: 'custom' }));
   const wCount = custom.length >= 2 ? 3 : 5;
   const cCount = Math.min(custom.length, 5 - wCount);
-  const fromWorld  = dPick(WORLD_CITIES, wCount).map(c => ({ ...c, source: 'world' }));
-  const fromCustom = dPick(custom, cCount);
+
+  // Pick world cities normally — list never changes
+  const fromWorld = dPick(WORLD_CITIES, wCount).map(c => ({ ...c, source: 'world' }));
+
+  // For contributed places: pick names using seeded RNG, then resolve back to full objects
+  // This way the seed is stable even if the DB list changes order or gains new entries
+  const customNames = dPick(custom.map(p => p.name), cCount);
+  const nameMap = {};
+  custom.forEach(p => nameMap[p.name] = p);
+
+  const fromCustom = customNames.map(name => {
+    if(nameMap[name]) return nameMap[name];
+    // Name not found (deleted/renamed) — fall back to a random world city
+    const fallback = WORLD_CITIES[Math.floor(Math.random()*WORLD_CITIES.length)];
+    return { ...fallback, source: 'world' };
+  });
+
   return dShuffle([...fromWorld, ...fromCustom]);
 }
 
