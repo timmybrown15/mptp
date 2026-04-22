@@ -10,6 +10,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+/* Shared utility classes */
+.img-preview{display:none;margin-top:6px;width:100%;height:120px;background:var(--bg);border:1px solid var(--border);overflow:hidden;}
+.img-preview img{width:100%;height:100%;object-fit:cover;}
+.optional-hint{color:var(--muted);font-size:.6rem;}
+/* Shared accent button base */
+#next-btn,#contribute-submit,#edit-save,#welcome-start,#welcome-see-results{background:var(--accent);color:#000;border:none;font-family:'Space Mono',monospace;font-weight:700;letter-spacing:.08em;cursor:pointer;text-transform:uppercase;transition:background .15s;}
 :root{--bg:#060610;--surface:#0f0f1a;--border:#1e1e30;--accent:#e8ff47;--text:#f0f0f0;--muted:#55557a;--card:#12121e;}
 html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;}
 body{display:flex;flex-direction:column;opacity:0;transition:opacity .6s ease;}
@@ -44,7 +50,7 @@ body{display:flex;flex-direction:column;opacity:0;transition:opacity .6s ease;}
 #result-pts-label{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;}
 #result-dist{font-size:.95rem;margin-bottom:12px;}
 #result-diss{font-size:.8rem;color:var(--muted);font-style:italic;margin-bottom:20px;min-height:1.2em;}
-#next-btn{background:var(--accent);color:#000;border:none;padding:12px 32px;width:100%;font-family:'Space Mono',monospace;font-size:.85rem;font-weight:700;letter-spacing:.08em;cursor:pointer;text-transform:uppercase;transition:background .15s;}
+#next-btn{padding:12px 32px;width:100%;font-size:.85rem;}
 #next-btn:hover{background:#fff;}
 #final-screen{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;z-index:3000;overflow:hidden;}
 #final-screen.show{display:flex;}
@@ -68,11 +74,11 @@ body{display:flex;flex-direction:column;opacity:0;transition:opacity .6s ease;}
 #fso-countdown-wrap{margin-top:auto;border-top:1px solid var(--border);padding-top:10px;}
 #fso-countdown-label{font-size:.6rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:4px;}
 #fso-countdown{font-family:'Space Mono',monospace;font-size:1.4rem;font-weight:700;color:var(--text);letter-spacing:.05em;}
-#mobile-countdown-wrap{text-align:center;padding:8px 16px;border-top:1px solid var(--border);background:rgba(6,6,16,.85);}
+#mobile-countdown-wrap{display:none;text-align:center;padding:8px 16px;border-top:1px solid var(--border);background:rgba(6,6,16,.85);}
 #mobile-countdown-label{font-size:.55rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);}
 #mobile-countdown{font-family:'Space Mono',monospace;font-size:1rem;font-weight:700;color:var(--text);}
 /* Info drawer — centered bottom sheet on desktop, hidden off-screen until opened */
-#info-drawer{position:fixed;left:50%;bottom:0;transform:translateX(-50%) translateY(100%);width:min(700px,75%);height:88vh;border-left:none;border-top:1px solid var(--border);border-radius:8px 8px 0 0;transition:transform .35s ease;z-index:3500;}
+#info-drawer{position:fixed;left:50%;bottom:0;transform:translateX(-50%) translateY(100%);width:min(700px,75%);height:88vh;background:var(--surface);display:flex;flex-direction:column;border-left:none;border-top:1px solid var(--border);border-radius:8px 8px 0 0;transition:transform .35s ease;z-index:3500;}
 #info-drawer.open{transform:translateX(-50%) translateY(0);}
 #play-again-btn,#play-again-btn-mobile{background:var(--accent);color:#000;border:none;font-family:'Space Mono',monospace;font-weight:700;letter-spacing:.08em;cursor:pointer;text-transform:uppercase;transition:background .15s;}
 #play-again-btn{padding:12px;font-size:.82rem;margin-top:auto;}
@@ -99,7 +105,7 @@ body{display:flex;flex-direction:column;opacity:0;transition:opacity .6s ease;}
 .form-input{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:10px 12px;font-family:'Syne',sans-serif;font-size:.9rem;outline:none;transition:border-color .15s;width:100%;}
 .form-input:focus{border-color:var(--accent);}
 textarea.form-input{resize:vertical;min-height:80px;}
-#contribute-submit{background:var(--accent);color:#000;border:none;padding:14px;font-family:'Space Mono',monospace;font-size:.82rem;font-weight:700;letter-spacing:.08em;cursor:pointer;text-transform:uppercase;transition:background .15s;}
+#contribute-submit{padding:14px;font-size:.82rem;}
 #contribute-submit:hover{background:#fff;}
 #contribute-submit:disabled{background:var(--border);color:var(--muted);cursor:not-allowed;}
 #contribute-success{display:none;text-align:center;padding:14px;background:rgba(232,255,71,.08);border:1px solid var(--accent);color:var(--accent);font-size:.85rem;line-height:1.6;}
@@ -108,7 +114,6 @@ textarea.form-input{resize:vertical;min-height:80px;}
 .marker-original{width:14px;height:14px;background:#ff4747;border:2px solid #000;border-radius:50%;box-shadow:0 0 0 2px #ff4747;opacity:0.5;}
 
 #final-mobile-bar{display:none;}
-#mobile-countdown-wrap{display:none;}
 
 /* ── MOBILE ── */
 @media(max-width:600px){
@@ -186,9 +191,9 @@ textarea.form-input{resize:vertical;min-height:80px;}
 #welcome-played-score{font-family:'Space Mono',monospace;font-size:3rem;font-weight:700;color:var(--accent);line-height:1;}
 #welcome-played-grade{font-size:.9rem;font-weight:700;color:var(--text);}
 #welcome-played-msg{font-size:.78rem;color:var(--muted);line-height:1.5;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:12px 0;}
-#welcome-see-results{background:var(--accent);color:#000;border:none;padding:14px;font-family:'Space Mono',monospace;font-size:.85rem;font-weight:700;letter-spacing:.08em;cursor:pointer;text-transform:uppercase;transition:background .15s;}
+#welcome-see-results{padding:14px;font-size:.85rem;}
 #welcome-see-results:hover{background:#fff;}
-#welcome-start{background:var(--accent);color:#000;border:none;padding:14px;font-family:'Space Mono',monospace;font-size:.85rem;font-weight:700;letter-spacing:.08em;cursor:pointer;text-transform:uppercase;transition:background .15s;margin-top:4px;}
+#welcome-start{padding:14px;font-size:.85rem;margin-top:4px;}
 #welcome-start:hover{background:#fff;}
 
 /* ── AUTH SCREEN ── */
@@ -232,7 +237,7 @@ textarea.form-input{resize:vertical;min-height:80px;}
 #edit-hint{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(6,6,16,.9);border:1px solid var(--border);padding:8px 16px;font-size:.75rem;color:var(--muted);letter-spacing:.06em;pointer-events:none;z-index:10;white-space:nowrap;}
 #edit-form{width:300px;flex-shrink:0;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;padding:24px;gap:18px;overflow-y:auto;}
 #edit-pin-coords{font-family:'Space Mono',monospace;font-size:.7rem;color:var(--muted);padding:10px;background:var(--bg);border:1px solid var(--border);}
-#edit-save{background:var(--accent);color:#000;border:none;padding:14px;font-family:'Space Mono',monospace;font-size:.82rem;font-weight:700;letter-spacing:.08em;cursor:pointer;text-transform:uppercase;transition:background .15s;}
+#edit-save{padding:14px;font-size:.82rem;}
 #edit-save:hover{background:#fff;}
 #edit-cancel-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:12px;font-family:'Space Mono',monospace;font-size:.8rem;cursor:pointer;text-transform:uppercase;transition:all .15s;}
 #edit-cancel-btn:hover{border-color:var(--text);color:var(--text);}
@@ -262,8 +267,7 @@ textarea.form-input{resize:vertical;min-height:80px;}
 .file-upload-status.uploading{color:var(--accent);}
 .file-upload-status.error{color:#ff4747;}
 
-/* ── INFO DRAWER ── */
-#info-drawer{background:var(--surface);display:flex;flex-direction:column;transition:transform .35s ease;}
+/* ── INFO DRAWER CONTENT STYLING ── */
 #info-drawer-img{width:100%;max-height:240px;object-fit:contain;background:#000;display:none;flex-shrink:0;}
 #info-drawer-img.loaded{display:block;}
 #info-drawer-body{padding:20px;overflow-y:scroll;-webkit-overflow-scrolling:touch;flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;}
@@ -360,14 +364,14 @@ textarea.form-input{resize:vertical;min-height:80px;}
         <textarea class="form-input" id="edit-desc" maxlength="200" style="min-height:80px;resize:vertical;"></textarea>
       </div>
       <div class="form-field">
-        <label class="form-label">Photo <span style="color:var(--muted);font-size:.6rem">(optional)</span></label>
+        <label class="form-label">Photo <span class="optional-hint">(optional)</span></label>
         <label class="file-upload-btn" id="edit-upload-btn">
           <span id="edit-upload-label">📷 Choose Photo</span>
           <input type="file" id="edit-image-file" accept="image/*">
         </label>
         <div class="file-upload-status" id="edit-upload-status"></div>
-        <div id="edit-image-preview" style="display:none;margin-top:6px;width:100%;height:120px;background:var(--bg);border:1px solid var(--border);overflow:hidden;">
-          <img id="edit-image-thumb" style="width:100%;height:100%;object-fit:cover;" src="">
+        <div id="edit-image-preview" class="img-preview">
+          <img id="edit-image-thumb" src="">
         </div>
       </div>
       <button id="edit-save" type="button">Save Changes</button>
@@ -508,18 +512,18 @@ textarea.form-input{resize:vertical;min-height:80px;}
         <input class="form-input" id="place-name" type="text" placeholder="e.g. Machu Picchu" maxlength="60">
       </div>
       <div class="form-field">
-        <label class="form-label" for="place-desc">Hint / Description <span style="color:var(--muted);font-size:.6rem">(optional)</span></label>
+        <label class="form-label" for="place-desc">Hint / Description <span class="optional-hint">(optional)</span></label>
         <textarea class="form-input" id="place-desc" placeholder="A clue or story about this place..." maxlength="200"></textarea>
       </div>
       <div class="form-field">
-        <label class="form-label">Photo <span style="color:var(--muted);font-size:.6rem">(optional)</span></label>
+        <label class="form-label">Photo <span class="optional-hint">(optional)</span></label>
         <label class="file-upload-btn" id="contribute-upload-btn">
           <span id="contribute-upload-label">📷 Choose Photo</span>
           <input type="file" id="place-image-file" accept="image/*">
         </label>
         <div class="file-upload-status" id="contribute-upload-status"></div>
-        <div id="place-image-preview" style="display:none;margin-top:6px;width:100%;height:120px;background:var(--bg);border:1px solid var(--border);overflow:hidden;">
-          <img id="place-image-thumb" style="width:100%;height:100%;object-fit:cover;" src="">
+        <div id="place-image-preview" class="img-preview">
+          <img id="place-image-thumb" src="">
         </div>
       </div>
       <div id="contribute-success">✓ Place saved!<br>It'll appear in your next game.</div>
@@ -693,7 +697,7 @@ async function deletePlace(id) {
 }
 
 async function loadAllPlaces() {
-  const { data, error } = await sb.from('places').select('*');
+  const { data, error } = await sb.from('places').select('*').order('id', { ascending: true });
   if (error) { console.error(error); return []; }
   return data;
 }
@@ -903,12 +907,17 @@ async function buildGame(){
   function dPick(arr,n){return dShuffle([...arr]).slice(0,Math.min(n,arr.length));}
 
   const dbPlaces = await loadAllPlaces();
-  const custom = dbPlaces.map(p => ({ ...p, source: 'custom' }));
+  // Sort by name with locale-independent comparison for stable ordering across users
+  const custom = dbPlaces.map(p => ({ ...p, source: 'custom' }))
+                         .sort((a,b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
+  // Also sort world cities the same way — defensive against cities.json edits/reorders
+  const worldSorted = [...WORLD_CITIES].sort((a,b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
+
   const wCount = custom.length >= 2 ? 3 : 5;
   const cCount = Math.min(custom.length, 5 - wCount);
 
-  // Pick world cities normally — list never changes
-  const fromWorld = dPick(WORLD_CITIES, wCount).map(c => ({ ...c, source: 'world' }));
+  // Pick world cities from the stable-sorted list
+  const fromWorld = dPick(worldSorted, wCount).map(c => ({ ...c, source: 'world' }));
 
   // For contributed places: pick names using seeded RNG, then resolve back to full objects
   // This way the seed is stable even if the DB list changes order or gains new entries
@@ -918,11 +927,12 @@ async function buildGame(){
 
   const fromCustom = customNames.map(name => {
     if(nameMap[name]) return nameMap[name];
-    // Name not found (deleted/renamed) — fall back to a random world city
-    const fallback = WORLD_CITIES[Math.floor(Math.random()*WORLD_CITIES.length)];
+    // Name not found (deleted/renamed) — fall back to a seeded world city pick
+    const fallback = worldSorted[Math.floor(rng()*worldSorted.length)];
     return { ...fallback, source: 'world' };
   });
 
+  // Final order uses the seeded RNG, so everyone on the same day sees the same sequence
   return dShuffle([...fromWorld, ...fromCustom]);
 }
 
