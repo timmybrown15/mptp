@@ -944,6 +944,98 @@ let cities=[],currentRound=0,totalScore=0,roundScores=[],locked=false,lastGrade=
 let map=null,finalMap=null,contributeMap=null;
 let markers=[],contributeMarker=null,pendingPin=null;
 let DISSES={};
+let COUNTRY_FEATURES=null; // Lazy-loaded GeoJSON feature collection
+
+// Country name aliases to match our data to Natural Earth's naming
+const COUNTRY_ALIASES={
+  'USA':'United States of America','US':'United States of America','United States':'United States of America',
+  'UK':'United Kingdom','Czechia':'Czech Republic',
+  'South Korea':'Republic of Korea','North Korea':'Dem. Rep. Korea',
+  'Russia':'Russian Federation','Vietnam':'Viet Nam',
+  'Ivory Coast':"Côte d'Ivoire",'Tanzania':'United Republic of Tanzania',
+  'DRC':'Dem. Rep. Congo','Congo':'Republic of the Congo',
+  'Myanmar':'Myanmar','Burma':'Myanmar',
+  'Palestine':'Palestine','Bolivia':'Bolivia',
+  'Laos':"Lao PDR",'Syria':'Syrian Arab Republic',
+  'Brunei':'Brunei Darussalam','Iran':'Iran (Islamic Republic of)',
+  'Taiwan':'Taiwan'
+};
+
+async function loadCountryFeatures(){
+  if(COUNTRY_FEATURES) return COUNTRY_FEATURES;
+  try{
+    const res = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json');
+    const topo = await res.json();
+    // Convert topojson to geojson inline (minimal implementation)
+    COUNTRY_FEATURES = topojsonToGeoJSON(topo, 'countries');
+  }catch(e){ console.error('Could not load country outlines', e); COUNTRY_FEATURES={features:[]}; }
+  return COUNTRY_FEATURES;
+}
+
+// Minimal TopoJSON → GeoJSON decoder (handles countries-50m.json format)
+function topojsonToGeoJSON(topo, objectName){
+  const obj = topo.objects[objectName];
+  const arcs = topo.arcs;
+  const transform = topo.transform;
+  const [dx,dy] = transform.scale;
+  const [tx,ty] = transform.translate;
+  function decodeArc(i){
+    const arc = arcs[i < 0 ? ~i : i];
+    let x=0, y=0;
+    const pts = arc.map(([px,py])=>{ x+=px; y+=py; return [x*dx+tx, y*dy+ty]; });
+    return i < 0 ? pts.slice().reverse() : pts;
+  }
+  function ring(arcIdxs){
+    const out = [];
+    arcIdxs.forEach((idx,i)=>{
+      const pts = decodeArc(idx);
+      if(i>0) out.pop(); // dedupe join point
+      out.push(...pts);
+    });
+    return out;
+  }
+  function polygon(p){ return p.map(ring); }
+  function geomToGeoJSON(g){
+    if(g.type==='Polygon') return {type:'Polygon', coordinates:polygon(g.arcs)};
+    if(g.type==='MultiPolygon') return {type:'MultiPolygon', coordinates:g.arcs.map(polygon)};
+    return null;
+  }
+  const features = obj.geometries.map(g=>({
+    type:'Feature',
+    properties: g.properties || {},
+    geometry: geomToGeoJSON(g)
+  })).filter(f=>f.geometry);
+  return {type:'FeatureCollection', features};
+}
+
+function findCountryFeature(countryName){
+  if(!COUNTRY_FEATURES || !countryName) return null;
+  const target = (COUNTRY_ALIASES[countryName] || countryName).toLowerCase();
+  return COUNTRY_FEATURES.features.find(f => {
+    const n = (f.properties.name||'').toLowerCase();
+    return n === target;
+  });
+}
+
+function showCountryOutline(m, countryName){
+  const feature = findCountryFeature(countryName);
+  if(!feature) return;
+  const id = 'country-outline';
+  if(m.getLayer(id+'-fill')) m.removeLayer(id+'-fill');
+  if(m.getLayer(id+'-line')) m.removeLayer(id+'-line');
+  if(m.getSource(id)) m.removeSource(id);
+  m.addSource(id, {type:'geojson', data: feature});
+  m.addLayer({id:id+'-fill', type:'fill', source:id, paint:{'fill-color':'#e8ff47','fill-opacity':0.18}});
+  m.addLayer({id:id+'-line', type:'line', source:id, paint:{'line-color':'#e8ff47','line-width':2.5,'line-opacity':0.9}});
+}
+
+function hideCountryOutline(m){
+  if(!m) return;
+  const id = 'country-outline';
+  if(m.getLayer(id+'-fill')) m.removeLayer(id+'-fill');
+  if(m.getLayer(id+'-line')) m.removeLayer(id+'-line');
+  if(m.getSource(id)) m.removeSource(id);
+}
 
 const STYLE={version:8,sources:{esri:{type:'raster',tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],tileSize:256,maxzoom:19,attribution:'Tiles © Esri'}},layers:[{id:'esri-tiles',type:'raster',source:'esri'}],sky:{'sky-color':'#000005','sky-horizon-blend':0.03,'horizon-color':'#08081a','horizon-fog-blend':0.8,'fog-color':'#04040f','atmosphere-blend':['interpolate',['linear'],['zoom'],0,1,6,1,10,0]}};
 
@@ -1248,6 +1340,9 @@ function submitGuess(lat,lng){
     const answerMk=new maplibregl.Marker({element:answerEl}).setLngLat([city.lng,city.lat]).addTo(map);
     markers.push(answerMk);
 
+    // Show country outline alongside the beacon
+    showCountryOutline(map, city.country);
+
     setTimeout(()=>map.flyTo({center:[city.lng,city.lat],zoom:5,duration:1200}),200);
 
     document.getElementById('result-city').textContent = city.country ? `${city.name}, ${city.country}` : city.name;
@@ -1309,6 +1404,8 @@ async function init(){
   } catch(e) {
     console.error('Could not load data files', e);
   }
+  // Preload country boundaries in background — don't block game start
+  loadCountryFeatures();
 
   cities = await buildGame();
   document.getElementById('round-total').textContent = cities.length;
@@ -1385,6 +1482,7 @@ function startRound(){
   locked=false; clearMarkers();
   if(map.getLayer('arc'))map.removeLayer('arc');
   if(map.getSource('arc'))map.removeSource('arc');
+  hideCountryOutline(map);
   const city=cities[currentRound];
   document.getElementById('pin-hint').classList.remove('hidden');
   document.getElementById('round-num').textContent=currentRound+1;
